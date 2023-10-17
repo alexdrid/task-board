@@ -7,14 +7,15 @@ import {
   CdkDrag,
   CdkDropList,
 } from '@angular/cdk/drag-drop';
+import { ListItemComponent } from "../list-item/list-item.component";
 
 
 @Component({
-  selector: 'app-board',
-  standalone: true,
-  imports: [CdkDropList, NgFor, CdkDrag],
-  templateUrl: './board.component.html',
-  styleUrls: ['./board.component.scss'],
+    selector: 'app-board',
+    standalone: true,
+    templateUrl: './board.component.html',
+    styleUrls: ['./board.component.scss'],
+    imports: [CdkDropList, NgFor, CdkDrag, ListItemComponent]
 })
 export class BoardComponent {
   todo = ['Get to work', 'Pick up groceries', 'Go home', 'Fall asleep'];

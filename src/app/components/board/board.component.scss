@@ -23,8 +23,3 @@
 .cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
     transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
-
-
-.list-card {
-    @apply bg-white shadow-md p-5 hover:bg-slate-100;
-}
