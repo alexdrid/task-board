@@ -9,7 +9,7 @@ import {
   CdkDragStart,
 } from '@angular/cdk/drag-drop';
 import { ListItemComponent } from '../list-item/list-item.component';
-import { SupabaseService } from 'src/app/services/supabase.service';
+import { DataService } from 'src/app/services/data.service';
 
 @Component({
   selector: 'app-board',
@@ -26,20 +26,20 @@ export class BoardComponent implements OnInit{
   isDragging = false;
   tasks: any[] = [];
 
-  constructor(private readonly supabase: SupabaseService) {}
+  constructor(private data: DataService) {}
 
   ngOnInit(): void {
-    // this.fetchTasks()
+    // this.fetchBoard()
   }
 
-  async fetchTasks(): Promise<void> {
-    let { data: tasks, error } = await this.supabase.fetchTasks()
-    if (error) {
-      console.error('error', error.message)
-    } else {
-      this.tasks = tasks ?? []
-    }
-  }
+  // async fetchTasks(): Promise<void> {
+  //   let { data: tasks, error } = await this.data.fetchBoard()
+  //   if (error) {
+  //     console.error('error', error.message)
+  //   } else {
+  //     this.tasks = tasks ?? []
+  //   }
+  // }
 
   drop(event: CdkDragDrop<string[]>) {
     if (event.previousContainer === event.container) {
