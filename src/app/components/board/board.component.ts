@@ -29,7 +29,7 @@ export class BoardComponent implements OnInit{
   constructor(private readonly supabase: SupabaseService) {}
 
   ngOnInit(): void {
-    this.fetchTasks()
+    // this.fetchTasks()
   }
 
   async fetchTasks(): Promise<void> {
