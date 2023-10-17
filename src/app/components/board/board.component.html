@@ -5,8 +5,9 @@
         <div cdkDropList #todoList="cdkDropList" [cdkDropListData]="todo" [cdkDropListConnectedTo]="[doneList]"
             class="flex flex-col gap-y-3 h-[500px] p-2 bg-slate-50 border border-slate-200 rounded-md group"
             (cdkDropListDropped)="drop($event)">
-            <app-list-item  *ngFor="let item of todo"  [text]="item"/>
-            <button class="hidden group-hover:block rounded w-full hover:bg-gray-200 py-2 text-slate-600">
+            <app-list-item *ngFor="let item of todo" [text]="item" (dragStart)="onDragStart()"
+                (dragEnd)="onDragEnd()" />
+            <button *ngIf="!isDragging" class="hidden group-hover:block rounded w-full hover:bg-gray-200 py-2 text-slate-600">
                 Add Task
             </button>
         </div>
@@ -16,10 +17,11 @@
         <h2 class="text-2xl">Done</h2>
 
         <div cdkDropList #doneList="cdkDropList" [cdkDropListData]="done" [cdkDropListConnectedTo]="[todoList]"
-            class="flex flex-col gap-y-3 h-[500px]  p-2 bg-slate-50 border border-slate-200 rounded-md group"
+            class="flex flex-col gap-y-3 h-[500px] p-2 bg-slate-50 border border-slate-200 rounded-md group"
             (cdkDropListDropped)="drop($event)">
-            <app-list-item  *ngFor="let item of done"  [text]="item"/>
-            <button class="hidden group-hover:block rounded w-full hover:bg-gray-200 py-2 text-slate-600">
+            <app-list-item *ngFor="let item of done" [text]="item" (dragStart)="onDragStart()"
+                (dragEnd)="onDragEnd()" />
+            <button *ngIf="!isDragging" class="hidden group-hover:block rounded w-full hover:bg-gray-200 py-2 text-slate-600">
                 Add Task
             </button>
         </div>
