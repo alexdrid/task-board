@@ -9,9 +9,11 @@ import {
   CdkDragStart,
 } from '@angular/cdk/drag-drop';
 import { ListItemComponent } from '../list-item/list-item.component';
-import { DataService } from 'src/app/services/data.service';
+import { DataService, LISTS_TABLE } from 'src/app/services/data.service';
 import { ActivatedRoute } from '@angular/router';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { List, ListCard } from 'src/app/models/data.model';
+import { first, from } from 'rxjs';
 
 @Component({
   selector: 'app-board',
@@ -21,37 +23,36 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
   imports: [CdkDropList, ReactiveFormsModule, NgFor, NgIf, ListItemComponent],
 })
 export class BoardComponent implements OnInit, AfterViewInit {
-  @ViewChildren(CdkDropList) boardDropZones!: QueryList<CdkDropList<string[]>>;
+  @ViewChildren(CdkDropList) boardDropZones!: QueryList<CdkDropList<ListCard[]>>;
+
+  private data = inject(DataService)
+  private route = inject(ActivatedRoute)
+  private fb = inject(FormBuilder)
 
   boardId: string | null = '';
-  todo = ['Get to work', 'Pick up groceries', 'Go home', 'Fall asleep'];
 
-  done = ['Get up', 'Brush teeth', 'Take a shower', 'Check e-mail', 'Walk dog'];
+  titleFormControl = new FormControl<string | null>('', Validators.required)
 
-  titleFormControl = new FormControl<string | null>('')
+  listForm = this.fb.group({
+    lists: this.fb.array<FormControl<string>>([])
+  });
 
   isDragging = false;
   tasks: any[] = [];
 
-  boards: any[] = [
-    {
-      title: 'Todo',
-      lists: this.todo
-    },
-    {
-      title: 'In Progress',
-      lists: ['Test']
-    },
-    {
-      title: 'Done',
-      lists: this.done
-    },
+  lists: List[] = []
+  boardInfo: {
+    title: string
+  } = {
+      title: ''
+    };
+  listCards = new Map<number, ListCard[]>();
 
-  ]
+  test(): void {
+    console.log('test');
 
-  private data = inject(DataService)
-  private route = inject(ActivatedRoute)
-  boardInfo: any;
+  }
+
 
   ngOnInit(): void {
     this.boardId = this.route.snapshot.paramMap.get('id')
@@ -63,46 +64,109 @@ export class BoardComponent implements OnInit, AfterViewInit {
       })
       // // Retrieve all lists
       // this.lists = await this.dataService.getBoardLists(this.boardId)
+      this.data.getBoardLists(this.boardId).then(res => {
+        this.lists = res.data as List[]
+
+
+
+        this.lists.forEach(list => {
+          this.listFormArray.push(
+            this.fb.nonNullable.control<string>(list.title, Validators.required)
+          )
+          this.data.getListCards(list.id).then(res => {
+            console.log("🚀 ~ file: board.component.ts:74 ~ BoardComponent ~ this.data.getListCards ~ res:", res)
+
+            this.listCards.set(list.id, res.data || [])
+            console.log("🚀 ~ file: board.component.ts:76 ~ BoardComponent ~ this.data.getListCards ~ this.listCards:", this.listCards)
+          })
+
+        })
+
+
+      })
 
       // // Retrieve cards for each list
       // for (let list of this.lists) {
       //   this.listCards[list.id] = await this.dataService.getListCards(list.id)
       // }
 
+
       // // For later...
-      // this.handleRealtimeUpdates()
+      this.handleRealtimeUpdates()
     }
     // this.fetchBoard()
   }
+
   ngAfterViewInit() {
-    this.boardDropZones.forEach((dz, _i, array) => {
-      dz.connectedTo = array.filter(item => item !== dz)
-    })
+    // this.boardDropZones.forEach((dz) => {
+    //   console.log("🚀 ~ file: board.component.ts:101 ~ BoardComponent ~ this.boardDropZones.toArray ~ dz:", dz)
+    //   // dz.connectedTo = array.filter(item => item !== dz)
+    // })
+
+    this.boardDropZones.changes.pipe(first()).subscribe((list: QueryList<CdkDropList<ListCard[]>>) => {
+      list.forEach((dz, _i, array) => dz.connectedTo = array.filter(item => item !== dz))
+    });
+
   }
 
-  // async fetchTasks(): Promise<void> {
-  //   let { data: tasks, error } = await this.data.fetchBoard()
-  //   if (error) {
-  //     console.error('error', error.message)
-  //   } else {
-  //     this.tasks = tasks ?? []
-  //   }
-  // }
-
   saveBoardTitle() {
-    this.boardInfo.title = this.titleFormControl.value
+    this.boardInfo.title = this.titleFormControl.value || ''
     this.data.updateBoard(this.boardInfo).then(() => {
       this.titleFormControl.markAsPristine()
     })
   }
 
-  drop(event: CdkDragDrop<string[]>) {
+  createList(): void {
+    this.data.addBoardList(this.boardId!, this.lists.length).then(res => {
+      console.log("🚀 ~ file: board.component.ts:98 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
+
+    })
+  }
+
+  saveListTitle(index: number): void {
+    console.log("🚀 ~ file: board.component.ts:103 ~ BoardComponent ~ saveCardTitle ~ index:", this.lists[index])
+
+    const listControl = this.listFormArray.at(index)
+    const newList: List = {
+      ...this.lists[index],
+      title: listControl.value
+    }
+    this.data.updateBoardList(newList).then((res) => {
+      listControl.markAsPristine()
+    })
+  }
+
+  addCard(index: number): void {
+    const targetList: List = this.lists[index]
+    this.data.addListCard(targetList.id, this.boardId!, this.listCards.get(targetList.id)!.length).then((res) => {
+    })
+  }
+
+  updateCard(card: ListCard): void {
+    this.data.updateCard(card).then(res => {
+
+    })
+  }
+
+  drop(event: CdkDragDrop<ListCard[]>) {
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data,
         event.previousIndex,
         event.currentIndex
       );
+
+      const droppedCard: ListCard = { ...event.container.data[event.currentIndex], position: event.currentIndex }
+
+      this.data.updateCard(droppedCard).then((res) => {
+        console.log("🚀 ~ file: board.component.ts:167 ~ BoardComponent ~ this.data.updateCard ~ res:", res)
+      })
+      const droppedCard2: ListCard = { ...event.container.data[event.previousIndex], position: event.previousIndex }
+
+      this.data.updateCard(droppedCard2).then((res) => {
+        console.log("🚀 ~ file: board.component.ts:167 ~ BoardComponent ~ this.data.updateCard ~ res:", res)
+      })
+
     } else {
       transferArrayItem(
         event.previousContainer.data,
@@ -121,7 +185,41 @@ export class BoardComponent implements OnInit, AfterViewInit {
     this.isDragging = false;
   }
 
-  getConnectedLists(cdkDropList: CdkDropList): CdkDropList<string[]>[] {
-    return this.boardDropZones?.filter(dz => dz.id !== cdkDropList.id)
+  handleRealtimeUpdates() {
+    this.data.getTableChanges(LISTS_TABLE).subscribe(payload => {
+
+      switch (payload.eventType) {
+        case 'INSERT':
+          const newList: List = payload.new as List
+          this.lists.push(newList)
+          this.listFormArray.push(
+            this.fb.nonNullable.control<string>(newList.title, Validators.required)
+          )
+          break;
+        case 'UPDATE':
+          const updatedList: List = payload.new as List
+          this.listFormArray.at(updatedList.position).setValue(updatedList.title)
+          break;
+        case 'DELETE':
+          const { id }: List = payload.old as List
+          const listIndex = this.lists.findIndex(list => list.id === id)
+          this.listFormArray.removeAt(listIndex)
+          this.lists.splice(listIndex, 1)
+          break;
+
+        default:
+          break;
+      }
+    })
+  }
+
+
+  getListData(index: number): ListCard[] {
+    const list: List = this.lists[index]
+    return this.listCards.get(list.id) || []
+  }
+
+  get listFormArray(): FormArray<FormControl<string>> {
+    return this.listForm.controls.lists
   }
 }

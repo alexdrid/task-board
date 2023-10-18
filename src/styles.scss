@@ -2,3 +2,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.backdrop{
+    @apply absolute top-0 left-0 w-screen h-screen bg-gray-600 opacity-50;
+}
+
+.dialog-panel {
+    @apply flex z-50 bg-white p-10
+}

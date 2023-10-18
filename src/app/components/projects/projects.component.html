@@ -3,7 +3,7 @@
     <h2 class="text-3xl">Projects</h2>
     <button
       class="rounded p-2 bg-emerald-600 hover:bg-emerald-500 text-white"
-      (click)="createBoard()"
+      (click)="openDialog()"
     >
       Create Project
     </button>
@@ -21,3 +21,5 @@
     </li>
   </ul>
 </main>
+
+<app-project-dialog [open]="showDialog" (close)="closeDialog($event)" />

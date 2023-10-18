@@ -1,15 +1,19 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService } from 'src/app/services/auth.service';
-import { DataService } from 'src/app/services/data.service';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+import { Board } from 'src/app/models/data.model';
+import { AuthService } from 'src/app/services/auth.service';
+import { BOARDS_TABLE, DataService } from 'src/app/services/data.service';
+import { ProjectDialogComponent } from './project-dialog/project-dialog.component';
 
 @Component({
   selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
   templateUrl: './projects.component.html',
-  styleUrls: ['./projects.component.scss']
+  styleUrls: ['./projects.component.scss'],
+  imports: [CommonModule, RouterLink, RouterOutlet, ProjectDialogComponent]
 })
 export class ProjectsComponent {
   private auth = inject(AuthService)
@@ -20,22 +24,15 @@ export class ProjectsComponent {
 
   boards: { id: number, title: string }[] = []
 
+  showDialog = false;
+
   ngOnInit(): void {
     this.getBoards()
 
-    this.data.handleTableChanges().subscribe(update => {
-      console.log("🚀 ~ file: projects.component.ts:25 ~ ProjectsComponent ~ this.data.handleTableChanges ~ update:", update)
-      this.boards.push(update.new)
+    this.handleChanges();
 
-      if (this.boards.length > 0) {
-        const newBoard = this.boards.pop()
-
-        if (newBoard) {
-          this.router.navigateByUrl(`/projects/${newBoard.id}`)
-        }
-      }
-    })
   }
+
   getBoards() {
     this.data.getBoards().then(res => {
       const { data, error } = res
@@ -46,18 +43,29 @@ export class ProjectsComponent {
   }
 
 
-
   openDialog(): void {
-
+    this.showDialog = true;
   }
 
-  createBoard(): void {
-    this.data.createBoard().then(res => {
-      console.log(res.data)
-    })
+  closeDialog(result: string): void {
+    this.showDialog = false;
   }
 
   getRouterLink(id: number): string {
     return id.toString()
+  }
+
+  private handleChanges() {
+    // Handle new boards inserts
+    this.data.getTableChanges(BOARDS_TABLE).subscribe((payload: RealtimePostgresChangesPayload<Board>) => {
+
+      if (payload.eventType === 'INSERT') {
+
+        const newBoard: Board = payload.new as Board
+
+        this.boards.push(newBoard)
+        this.router.navigateByUrl(`/projects/${newBoard.id}`)
+      }
+    })
   }
 }

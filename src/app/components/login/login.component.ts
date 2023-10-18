@@ -27,7 +27,6 @@ export class LoginComponent {
 
 
     this.auth.currentUser$.subscribe((user: User | boolean) => {
-      console.log("🚀 ~ file: login.component.ts:30 ~ LoginComponent ~ this.auth.currentUser$.subscribe ~ user:", user)
       if (user) {
         this.router.navigateByUrl('/projects', { replaceUrl: true });
       }

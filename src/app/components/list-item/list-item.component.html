@@ -1,1 +1,17 @@
-<div class="list-card">{{text}}</div>
+<div class="list-card">
+  <ng-container *ngIf="!cardInfo.title; else content">
+    <input
+      type="text"
+      placeholder="Add a title"
+      class="px-2 py-3 w-full bg-transparent text-emerald-950 text-xl rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm"
+      [formControl]="titleFormControl"
+      (keyup.enter)="updateCard()"
+    />
+  </ng-container>
+
+  <ng-template #content>
+    <div class="px-2 py-3 text-xl">
+      {{ cardInfo.title }}
+    </div>
+  </ng-template>
+</div>
