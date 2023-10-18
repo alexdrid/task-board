@@ -91,11 +91,11 @@ export class DataService {
   }
 
 
-  addListCard(listId: number, boardId: string, position = 0) {
+  addListCard(title: string, listId: number, boardId: string, position = 0) {
     return this.supabase
       .from(CARDS_TABLE)
       .insert(
-        { board_id: boardId, list_id: listId, position }
+        { title: title, board_id: boardId, list_id: listId, position }
       )
       .select('*')
       .single();
@@ -108,12 +108,14 @@ export class DataService {
       .match({ id: card.id });
   }
 
-  upsertCards(cards: ListCard[]) {
+  deleteCard(card: ListCard) {
     return this.supabase
-      .from('projects')
-      .upsert(cards)
+      .from(CARDS_TABLE)
+      .delete()
+      .match({ id: card.id });
   }
 
+  
 
   getTableChanges(table: string): Observable<RealtimePostgresChangesPayload<any>> {
     const changes = new Subject<RealtimePostgresChangesPayload<any>>();

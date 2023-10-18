@@ -1,14 +1,4 @@
 <div class="container max-w-7xl flex flex-col mx-auto p-8">
-  <!-- <input
-    type="text"
-    [(ngModel)]="boardInfo.title"
-    class="block w-full px-3 space-x-4 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 sm:text-sm"
-  /> -->
-  <!-- <div class="flex gap-4"> -->
-  <!-- <button class="font-medium" *ngIf="titleChanged" (click)="saveBoardTitle()">
-      Save
-    </button> -->
-  <!-- </div> -->
   <div class="flex justify-between items-center mb-5">
     <div class="flex items-center gap-4">
       <!-- <input
@@ -33,7 +23,7 @@
       </h2>
     </div>
 
-    <button
+    <!-- <button
       class="flex items-center rounded w-fit text-start border border-zinc-200 hover:bg-gray-200 px-3 py-2 text-slate-600"
       (click)="createList()"
     >
@@ -52,64 +42,65 @@
         />
       </svg>
       Add List
-    </button>
+    </button> -->
   </div>
   <div
     [formGroup]="listForm"
-    class="px-2 py-3 flex justify-start items-start gap-4 max-w-full overflow-x-auto "
+    class="px-2 py-3 flex justify-start items-start gap-4 max-w-full overflow-x-auto"
   >
     <ng-container formArrayName="lists">
       <div
         *ngFor="let listControl of listFormArray.controls; let i = index"
-        class="min-w-[300px] min-h-[400px] space-y-4 relative max-h-[600px] overflow-y-auto bg-slate-50 border border-slate-200 rounded-md"
+        class="min-w-[300px] min-h-[400px] relative max-h-[600px] overflow-y-auto bg-slate-50 border border-slate-200 rounded-md"
       >
-        <div class="flex justify-between gap-4 sticky top-0 p-2 py-1 z-10 bg-gray-50 shadow-md shadow-gray-200">
-          <div class="w-full flex justify-between items-center ">
+        <div
+          class="flex justify-between gap-4 sticky top-0 p-2 py-1 z-10 bg-gray-50 shadow-md shadow-gray-200"
+        >
+          <div class="w-full flex justify-between items-center">
             <h2
               class="p-1 text-emerald-950 text-xl rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm"
             >
               {{ listControl.value }}
             </h2>
-            <button
-              *ngIf="!isDragging"
-              class="group-hover:block rounded  hover:bg-gray-200 p-2 text-slate-600"
-              (click)="addCard(i)"
-            >
-              Add Task
-            </button>
           </div>
-          <!-- <form class="w-fit">
-            <input
-              type="text"
-              [formControl]="listControl"
-              class="px-2 py-3 w-auto bg-white text-emerald-950 text-xl rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm hover:bg-gray-50"
-            />
-            <button
-              *ngIf="listControl.dirty"
-              [disabled]="listControl.invalid"
-              class="font-medium disabled:text-gray-400"
-              (click)="saveListTitle(i)"
-            >
-              Save
-            </button>
-          </form> -->
         </div>
 
         <div
           #list="cdkDropList"
           cdkDropList
-          class="flex flex-col gap-y-3 px-2"
+          class="flex flex-col justify-center gap-y-3 px-2 min-h-[60px]"
           [cdkDropListData]="getListData(i)"
           (cdkDropListDropped)="drop($event)"
         >
+          <div
+            *ngIf="getListData(i).length === 0 && !isDragging"
+            class="text-gray-300 text-center"
+          >
+            You can drop a task here
+          </div>
           <app-list-item
             *ngFor="let item of getListData(i)"
             [cardInfo]="item"
-            [dragDisabled]="item.title === ''"
             (dragStart)="onDragStart()"
             (dragEnd)="onDragEnd()"
-            (onSave)="updateCard($event)"
+            (onRemove)="deleteCard($event, i)"
           />
+        </div>
+        <app-item-form
+          *ngIf="!hideForm && formIndex === i"
+          (onSave)="addCard($event, i)"
+          (onCancel)="hideForm = true"
+        />
+        <div
+          class="sticky bottom-0 p-2 z-10 bg-gray-50 border-t-2 border-gray-200"
+        >
+          <button
+            [disabled]="isDragging"
+            class="w-full rounded hover:bg-gray-200 p-2 text-slate-600 disabled:pointer-events-none disabled:opacity-50"
+            (click)="showTaskForm(i)"
+          >
+            Add Task
+          </button>
         </div>
       </div>
     </ng-container>

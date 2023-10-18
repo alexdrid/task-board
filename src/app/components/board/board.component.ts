@@ -4,23 +4,23 @@ import {
   CdkDragDrop,
   moveItemInArray,
   transferArrayItem,
-  CdkDrag,
   CdkDropList,
-  CdkDragStart,
+  CdkDragPlaceholder,
 } from '@angular/cdk/drag-drop';
 import { ListItemComponent } from '../list-item/list-item.component';
-import { DataService, LISTS_TABLE } from 'src/app/services/data.service';
+import { CARDS_TABLE, DataService, LISTS_TABLE } from 'src/app/services/data.service';
 import { ActivatedRoute } from '@angular/router';
-import { FormArray, FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { List, ListCard } from 'src/app/models/data.model';
-import { first, from } from 'rxjs';
+import { first } from 'rxjs';
+import { ItemFormComponent } from "../item-form/item-form.component";
 
 @Component({
   selector: 'app-board',
   standalone: true,
   templateUrl: './board.component.html',
   styleUrls: ['./board.component.scss'],
-  imports: [CdkDropList, ReactiveFormsModule, NgFor, NgIf, ListItemComponent],
+  imports: [CdkDropList, ReactiveFormsModule, NgClass, NgFor, NgIf, ListItemComponent, ItemFormComponent]
 })
 export class BoardComponent implements OnInit, AfterViewInit {
   @ViewChildren(CdkDropList) boardDropZones!: QueryList<CdkDropList<ListCard[]>>;
@@ -47,23 +47,17 @@ export class BoardComponent implements OnInit, AfterViewInit {
       title: ''
     };
   listCards = new Map<number, ListCard[]>();
-
-  test(): void {
-    console.log('test');
-
-  }
-
+  hideForm: boolean = true;
+  formIndex: number | null = null;
 
   ngOnInit(): void {
     this.boardId = this.route.snapshot.paramMap.get('id')
     if (this.boardId) {
-      // Load general board information
       this.data.getBoardInfo(this.boardId).then(res => {
         this.boardInfo = res.data
         this.titleFormControl.setValue(this.boardInfo.title)
       })
-      // // Retrieve all lists
-      // this.lists = await this.dataService.getBoardLists(this.boardId)
+
       this.data.getBoardLists(this.boardId).then(res => {
         this.lists = res.data as List[]
 
@@ -74,37 +68,23 @@ export class BoardComponent implements OnInit, AfterViewInit {
             this.fb.nonNullable.control<string>(list.title, Validators.required)
           )
           this.data.getListCards(list.id).then(res => {
-            console.log("🚀 ~ file: board.component.ts:74 ~ BoardComponent ~ this.data.getListCards ~ res:", res)
-
             this.listCards.set(list.id, res.data || [])
-            console.log("🚀 ~ file: board.component.ts:76 ~ BoardComponent ~ this.data.getListCards ~ this.listCards:", this.listCards)
           })
 
         })
 
 
       })
-
-      // // Retrieve cards for each list
-      // for (let list of this.lists) {
-      //   this.listCards[list.id] = await this.dataService.getListCards(list.id)
-      // }
-
-
       // // For later...
       this.handleRealtimeUpdates()
     }
-    // this.fetchBoard()
   }
 
   ngAfterViewInit() {
-    // this.boardDropZones.forEach((dz) => {
-    //   console.log("🚀 ~ file: board.component.ts:101 ~ BoardComponent ~ this.boardDropZones.toArray ~ dz:", dz)
-    //   // dz.connectedTo = array.filter(item => item !== dz)
-    // })
-
     this.boardDropZones.changes.pipe(first()).subscribe((list: QueryList<CdkDropList<ListCard[]>>) => {
       list.forEach((dz, _i, array) => dz.connectedTo = array.filter(item => item !== dz))
+      console.log(list);
+      
     });
 
   }
@@ -118,13 +98,10 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   createList(): void {
     this.data.addBoardList(this.boardId!, this.lists.length).then(res => {
-      console.log("🚀 ~ file: board.component.ts:98 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
-
     })
   }
 
   saveListTitle(index: number): void {
-    console.log("🚀 ~ file: board.component.ts:103 ~ BoardComponent ~ saveCardTitle ~ index:", this.lists[index])
 
     const listControl = this.listFormArray.at(index)
     const newList: List = {
@@ -136,14 +113,22 @@ export class BoardComponent implements OnInit, AfterViewInit {
     })
   }
 
-  addCard(index: number): void {
+  addCard(title: string, index: number): void {
     const targetList: List = this.lists[index]
-    this.data.addListCard(targetList.id, this.boardId!, this.listCards.get(targetList.id)!.length).then((res) => {
+    console.log("🚀 ~ file: board.component.ts:117 ~ BoardComponent ~ addCard ~ targetList:", targetList)
+    this.data.addListCard(title, targetList.id, this.boardId!, this.listCards.get(targetList.id)!.length).then((res) => {
+      this.hideTaskForm(index)
     })
   }
 
   updateCard(card: ListCard): void {
     this.data.updateCard(card).then(res => {
+
+    })
+  }
+
+  deleteCard(card: ListCard, listIndex: number): void {
+    this.data.deleteCard(card).then(res => {
 
     })
   }
@@ -159,12 +144,10 @@ export class BoardComponent implements OnInit, AfterViewInit {
       const droppedCard: ListCard = { ...event.container.data[event.currentIndex], position: event.currentIndex }
 
       this.data.updateCard(droppedCard).then((res) => {
-        console.log("🚀 ~ file: board.component.ts:167 ~ BoardComponent ~ this.data.updateCard ~ res:", res)
       })
       const droppedCard2: ListCard = { ...event.container.data[event.previousIndex], position: event.previousIndex }
 
       this.data.updateCard(droppedCard2).then((res) => {
-        console.log("🚀 ~ file: board.component.ts:167 ~ BoardComponent ~ this.data.updateCard ~ res:", res)
       })
 
     } else {
@@ -211,6 +194,44 @@ export class BoardComponent implements OnInit, AfterViewInit {
           break;
       }
     })
+
+    this.data.getTableChanges(CARDS_TABLE).subscribe(payload => {
+
+      switch (payload.eventType) {
+        case 'INSERT':
+          const newListCard: ListCard = payload.new as ListCard
+          const list = this.listCards.get(newListCard.list_id) || []
+          this.listCards.set(newListCard.list_id, [...list, newListCard])
+          break;
+        case 'UPDATE':
+          // const updatedListCard: ListCard = payload.new as ListCard
+          // this.listFormArray.at(updatedListCard.position).setValue(updatedListCard.title)
+          break;
+        case 'DELETE':
+          const { id }: ListCard = payload.old as ListCard;
+
+          this.listCards.forEach((value, key) => {
+            const index = value.findIndex(item => item.id === id);
+            if (index !== -1) {
+              const removedEntry = value.splice(index, 1);
+            }
+          });
+          break;
+
+        default:
+          break;
+      }
+    })
+  }
+
+  showTaskForm(index: number): void {
+    this.hideForm = false;
+    this.formIndex = index
+  }
+
+  hideTaskForm(index: number): void {
+    this.hideForm = true;
+    this.formIndex = null
   }
 
 

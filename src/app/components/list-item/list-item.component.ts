@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
+import { CdkDrag, CdkDragPlaceholder, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ListCard } from 'src/app/models/data.model';
 
@@ -16,16 +16,17 @@ import { ListCard } from 'src/app/models/data.model';
       inputs: ['cdkDragDisabled: dragDisabled'],
       outputs: ['cdkDragStarted: dragStart', 'cdkDragEnded: dragEnd'],
     },
+  
   ],
 })
 export class ListItemComponent {
   @Input() cardInfo!: ListCard;
-  @Output() onSave = new EventEmitter<ListCard>()
+  @Output() onRemove = new EventEmitter<ListCard>()
 
   titleFormControl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required] })
 
-  dragStart() {
-    console.log('start drag');
+  remove(): void {
+    this.onRemove.emit(this.cardInfo)
   }
 
   updateCard(): void {
@@ -34,7 +35,7 @@ export class ListItemComponent {
         ...this.cardInfo,
         title: this.titleFormControl.value
       }
-      this.onSave.emit(newCard)
+      this.onRemove.emit(newCard)
     }
   }
 }

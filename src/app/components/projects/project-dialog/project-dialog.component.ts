@@ -38,7 +38,6 @@ export class ProjectDialogComponent {
   createBoard(): void {
     this.loading = true;
     this.projectForm.disable()
-    console.log('submit');
 
     const { title = '', description } = this.projectForm.value
 
