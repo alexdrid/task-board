@@ -2,22 +2,22 @@ import { Component, inject } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from 'src/app/services/auth.service';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { User } from '@supabase/supabase-js';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [NgIf, ReactiveFormsModule],
+  imports: [NgIf, ReactiveFormsModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
   loginForm!: FormGroup<{
     email: FormControl<string>;
-    password: FormControl<string>
   }>;
 
-  errorMsg = '';
+  message: string = '';
 
   private fb = inject(FormBuilder)
   private auth = inject(AuthService)
@@ -26,9 +26,10 @@ export class LoginComponent {
   constructor() {
 
 
-    this.auth.currentUser$.subscribe((user) => {
-      if (!user) {
-        this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+    this.auth.currentUser$.subscribe((user: User | boolean) => {
+      console.log("🚀 ~ file: login.component.ts:30 ~ LoginComponent ~ this.auth.currentUser$.subscribe ~ user:", user)
+      if (user) {
+        this.router.navigateByUrl('/projects', { replaceUrl: true });
       }
     });
 
@@ -40,25 +41,21 @@ export class LoginComponent {
           /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
         ),
       ]),
-      password: this.fb.nonNullable.control('', [Validators.required, Validators.minLength(7)]),
     });
   }
 
   onSubmit(): void {
 
-    const { email, password } = this.loginForm.value
+    const { email } = this.loginForm.value
 
-    if (email && password) {
-      this.auth.signIn(email, password)
+    if (email) {
+      this.auth.signIn(email)
         .then(res => {
 
-          const { data, error } = res
-          if (error) {
-            this.errorMsg = error.message
-          }
-
-          if (data.user?.role === 'authenticated') {
-            this.router.navigate(['/dashboard']);
+          if (!res.error) {
+            this.message = 'Check your emails'
+          } else {
+            alert(res.error.message)
           }
         })
         .catch((err) => {
@@ -68,6 +65,6 @@ export class LoginComponent {
   }
 
   closeAlert(): void {
-    this.errorMsg = ''
+    this.message = ''
   }
 }

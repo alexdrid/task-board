@@ -18,6 +18,7 @@ export class DataService {
     this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey)
   }
 
+  // CRUD Board
   getBoards() {
     return this.supabase.from(USER_BOARDS_TABLE).select('boards:board_id(*)')
   }
@@ -26,6 +27,21 @@ export class DataService {
     return this.supabase
       .from(BOARDS_TABLE)
       .insert({});
+  }
+
+  getBoardInfo(boardId: string) {
+    return this.supabase
+      .from(BOARDS_TABLE)
+      .select('*')
+      .match({ id: boardId })
+      .single();
+  }
+
+  updateBoard(board: any) {
+    return this.supabase
+      .from(BOARDS_TABLE)
+      .update(board)
+      .match({ id: board.id });
   }
 
   handleTableChanges() {

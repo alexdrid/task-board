@@ -1,20 +1,20 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { DataService } from 'src/app/services/data.service';
+import { Router, RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-projects',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+  imports: [CommonModule, RouterLink, RouterOutlet],
+  templateUrl: './projects.component.html',
+  styleUrls: ['./projects.component.scss']
 })
-export class DashboardComponent implements OnInit {
-
+export class ProjectsComponent {
   private auth = inject(AuthService)
   private data = inject(DataService)
+  private router = inject(Router)
 
   user = this.auth.currentUser$;
 
@@ -24,7 +24,16 @@ export class DashboardComponent implements OnInit {
     this.getBoards()
 
     this.data.handleTableChanges().subscribe(update => {
+      console.log("🚀 ~ file: projects.component.ts:25 ~ ProjectsComponent ~ this.data.handleTableChanges ~ update:", update)
       this.boards.push(update.new)
+
+      if (this.boards.length > 0) {
+        const newBoard = this.boards.pop()
+
+        if (newBoard) {
+          this.router.navigateByUrl(`/projects/${newBoard.id}`)
+        }
+      }
     })
   }
   getBoards() {
@@ -36,13 +45,19 @@ export class DashboardComponent implements OnInit {
     })
   }
 
-  signOut(): void {
-    this.auth.signOut()
+
+
+  openDialog(): void {
+
   }
 
   createBoard(): void {
     this.data.createBoard().then(res => {
       console.log(res.data)
     })
+  }
+
+  getRouterLink(id: number): string {
+    return id.toString()
   }
 }

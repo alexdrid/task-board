@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { AuthTokenResponse, SupabaseClient, User, createClient } from '@supabase/supabase-js';
+import { AuthOtpResponse, AuthTokenResponse, SupabaseClient, User, createClient } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable, from } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -23,7 +23,6 @@ export class AuthService {
       const { data, error } = res
 
       if (data) {
-        console.log("🚀 ~ file: auth.service.ts:23 ~ AuthService ~ user ~ data:", data.user)
         this._currentUser.next(data.user);
       } 
       
@@ -33,7 +32,7 @@ export class AuthService {
     });
 
     this.supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         this._currentUser.next(session?.user);
       } else {
         this._currentUser.next(false);
@@ -42,10 +41,9 @@ export class AuthService {
     });
   }
 
-  signIn(email: string, password: string): Promise<AuthTokenResponse> {
-    return this.supabase.auth.signInWithPassword({
+  signIn(email: string): Promise<AuthOtpResponse> {
+    return this.supabase.auth.signInWithOtp({
       email,
-      password,
     });
   }
 

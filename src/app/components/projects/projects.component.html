@@ -1,0 +1,23 @@
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex justify-between mb-5">
+    <h2 class="text-3xl">Projects</h2>
+    <button
+      class="rounded p-2 bg-emerald-600 hover:bg-emerald-500 text-white"
+      (click)="createBoard()"
+    >
+      Create Project
+    </button>
+  </div>
+  <ul
+    role="list"
+    class="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-6 lg:grid-cols-4 xl:gap-x-8"
+  >
+    <li
+      *ngFor="let board of boards"
+      [routerLink]="getRouterLink(board.id)"
+      class="relative bg-emerald-200 h-20 rounded font-semibold text-lg py-4 px-4 hover:bg-emerald-400 hover:cursor-pointer"
+    >
+      {{ board.title }}
+    </li>
+  </ul>
+</main>
