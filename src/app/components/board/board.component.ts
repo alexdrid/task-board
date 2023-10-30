@@ -5,13 +5,14 @@ import {
   moveItemInArray,
   transferArrayItem,
   CdkDropList,
+  CdkDragExit,
 } from '@angular/cdk/drag-drop';
 import { ListItemComponent } from '../list-item/list-item.component';
 import { CARDS_TABLE, DataService, LISTS_TABLE } from 'src/app/services/data.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { List, ListCard } from 'src/app/models/data.model';
-import { first } from 'rxjs';
+import { first, last, takeLast } from 'rxjs';
 import { ItemFormComponent } from "../item-form/item-form.component";
 
 @Component({
@@ -83,7 +84,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.boardDropZones.changes.pipe(first()).subscribe((list: QueryList<CdkDropList<ListCard[]>>) => {
+    this.boardDropZones.changes.subscribe((list: QueryList<CdkDropList<ListCard[]>>) => {
       list.forEach((dz, _i, array) => dz.connectedTo = array.filter(item => item !== dz))
     });
 
@@ -98,13 +99,11 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   createList(): void {
     this.data.addBoardList(this.boardId!, this.lists.length).then(res => {
-      console.log("🚀 ~ file: board.component.ts:99 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
     })
   }
 
   deleteList(index: number): void {
     this.data.deleteBoardList(this.lists[index]).then(res => {
-      console.log("🚀 ~ file: board.component.ts:99 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
     })
   }
 
@@ -129,7 +128,6 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   updateCard(card: ListCard): void {
     this.data.updateCard(card).then(res => {
-      console.log("🚀 ~ file: board.component.ts:152 ~ BoardComponent ~ this.data.updateCard ~ card:", card)
 
     })
   }
@@ -147,7 +145,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  drop(event: CdkDragDrop<ListCard[]>) {
+  drop(event: CdkDragDrop<ListCard[], ListCard[], ListCard>): void {
     if (event.previousContainer === event.container) {
       moveItemInArray(
         event.container.data,
@@ -171,8 +169,19 @@ export class BoardComponent implements OnInit, AfterViewInit {
         event.previousIndex,
         event.currentIndex
       );
+
+      const newIndex = this.boardDropZones.toArray().findIndex(bz => bz.id === event.container.id)
+      
+      event.container.data.forEach((item, index) => {
+        this.updateCard({
+            ...item,
+            list_id: this.lists[newIndex].id,
+            position: index
+          })
+      })
     }
   }
+
 
   onDragStart() {
     this.isDragging = true;
@@ -184,11 +193,11 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   handleRealtimeUpdates() {
     this.data.getTableChanges(LISTS_TABLE).subscribe(payload => {
-      console.log("🚀 ~ file: board.component.ts:171 ~ BoardComponent ~ this.data.getTableChanges ~ payload:", payload)
 
       switch (payload.eventType) {
         case 'INSERT':
           const newList: List = payload.new as List
+          this.listCards.set(newList.id, [])
           this.lists.push(newList)
           this.listFormArray.push(
             this.fb.nonNullable.control<string>(newList.title, Validators.required)
@@ -217,10 +226,6 @@ export class BoardComponent implements OnInit, AfterViewInit {
           const newListCard: ListCard = payload.new as ListCard
           const list = this.listCards.get(newListCard.list_id) || []
           this.listCards.set(newListCard.list_id, [...list, newListCard])
-          break;
-        case 'UPDATE':
-          // const updatedListCard: ListCard = payload.new as ListCard
-          // this.listFormArray.at(updatedListCard.position).setValue(updatedListCard.title)
           break;
         case 'DELETE':
           const { id }: ListCard = payload.old as ListCard;

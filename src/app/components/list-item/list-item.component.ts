@@ -13,13 +13,13 @@ import { ListCard } from 'src/app/models/data.model';
   hostDirectives: [
     {
       directive: CdkDrag,
-      inputs: ['cdkDragDisabled: dragDisabled'],
+      inputs: ['cdkDragDisabled: dragDisabled', 'cdkDragData:data'],
       outputs: ['cdkDragStarted: dragStart', 'cdkDragEnded: dragEnd'],
     },
-  
+
   ],
 })
-export class ListItemComponent implements OnInit{
+export class ListItemComponent implements OnInit {
   @Input() cardInfo!: ListCard;
   @Output() onRemove = new EventEmitter<ListCard>()
   @Output() onSave = new EventEmitter<ListCard>()
@@ -27,7 +27,7 @@ export class ListItemComponent implements OnInit{
   titleFormControl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required] })
 
   ngOnInit(): void {
-      this.titleFormControl.setValue(this.cardInfo.title)
+    this.titleFormControl.setValue(this.cardInfo.title)
   }
 
 

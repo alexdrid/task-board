@@ -101,6 +101,7 @@
             You can drop a task here
           </div>
           <app-list-item
+            [data]="item"
             *ngFor="let item of getListData(i)"
             [cardInfo]="item"
             (dragStart)="onDragStart()"

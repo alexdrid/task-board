@@ -58,7 +58,6 @@ export class ProjectsComponent {
   private handleChanges() {
     // Handle new boards inserts
     this.data.getTableChanges(BOARDS_TABLE).subscribe((payload: RealtimePostgresChangesPayload<Board>) => {
-      console.log("🚀 ~ file: projects.component.ts:61 ~ ProjectsComponent ~ this.data.getTableChanges ~ payload:", payload)
 
       switch (payload.eventType) {
         case 'INSERT':
