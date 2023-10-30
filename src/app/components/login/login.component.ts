@@ -22,6 +22,7 @@ export class LoginComponent {
   private fb = inject(FormBuilder)
   private auth = inject(AuthService)
   private router = inject(Router)
+  loading: boolean =  false;
 
   constructor() {
 
@@ -48,6 +49,7 @@ export class LoginComponent {
     const { email } = this.loginForm.value
 
     if (email) {
+      this.loading = true;
       this.auth.signIn(email)
         .then(res => {
 
@@ -59,6 +61,9 @@ export class LoginComponent {
         })
         .catch((err) => {
           console.error(err)
+        })
+        .finally(() => {
+          this.loading = false;
         })
     }
   }
