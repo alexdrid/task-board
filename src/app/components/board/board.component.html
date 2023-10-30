@@ -1,7 +1,7 @@
 <div class="container max-w-7xl flex flex-col mx-auto p-8">
   <div class="flex justify-between items-center mb-5">
     <div class="flex items-center gap-4">
-      <!-- <input
+      <input
         type="text"
         [formControl]="titleFormControl"
         class="px-2 py-3 bg-white text-emerald-950 text-2xl font-bold rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm hover:bg-gray-50"
@@ -15,34 +15,42 @@
         (click)="saveBoardTitle()"
       >
         Save
-      </button> -->
-      <h2
+      </button>
+      <!-- <h2
         class="p-1 w-auto bg-white text-emerald-950 text-2xl font-bold rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm"
       >
         {{ boardInfo.title }}
-      </h2>
+      </h2> -->
     </div>
 
-    <button
-      class="flex items-center rounded w-fit text-start border border-zinc-200 hover:bg-gray-200 px-3 py-2 text-slate-600"
-      (click)="createList()"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke-width="1.5"
-        stroke="currentColor"
-        class="w-6 h-6 mr-2"
+    <div class="flex space-x-2">
+      <button
+        class="flex items-center rounded w-fit text-start border border-zinc-200 hover:bg-gray-200 px-3 py-2 text-slate-600"
+        (click)="createList()"
       >
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          d="M12 4.5v15m7.5-7.5h-15"
-        />
-      </svg>
-      Add List
-    </button>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          class="w-6 h-6 mr-2"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          />
+        </svg>
+        Add List
+      </button>
+      <button
+        class="px-2 rounded bg-red-400 text-white hover:bg-red-100 hover:text-red-400 hover:border hover:border-red-400 disabled:pointer-events-none disabled:opacity-50"
+        (click)="deleteProject()"
+      >
+        Delete Project
+      </button>
+    </div>
   </div>
   <div
     [formGroup]="listForm"
@@ -51,18 +59,32 @@
     <ng-container formArrayName="lists">
       <div
         *ngFor="let listControl of listFormArray.controls; let i = index"
-        class="min-w-[300px] min-h-[400px] relative max-h-[600px] overflow-y-auto bg-slate-50 border border-slate-200 rounded-md"
+        class="min-w-[320px] min-h-[400px] relative max-h-[600px] overflow-y-auto bg-slate-50 border border-slate-200 rounded-md"
       >
         <div
           class="flex justify-between gap-4 sticky top-0 p-2 py-1 z-10 bg-gray-50 shadow-md shadow-gray-200"
         >
-          <div class="w-full flex justify-between items-center">
-            <h2
-              class="p-1 text-emerald-950 text-xl rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm"
+          <div class="max-w-[250px] flex justify-between items-center gap-2">
+            <input
+              type="text"
+              [formControl]="listControl"
+              class="px-2 py-2 w-[180px] bg-transparent text-emerald-950 text-xl font-bold rounded-md focus:outline-none focus:ring-1 focus:ring-emerald-500 max-sm:text-sm hover:bg-gray-200"
+            />
+            <button
+              *ngIf="listControl.dirty && listControl.value !== lists[i].title"
+              [disabled]="listControl.invalid"
+              class="font-medium disabled:text-gray-400"
+              (click)="saveListTitle(i)"
             >
-              {{ listControl.value }}
-            </h2>
+              Save
+            </button>
           </div>
+          <button
+            class="px-2 rounded bg-red-400 text-white hover:bg-red-100 hover:text-red-400 hover:border hover:border-red-400 disabled:pointer-events-none disabled:opacity-50"
+            (click)="deleteList(i)"
+          >
+            Delete
+          </button>
         </div>
 
         <div
@@ -84,6 +106,7 @@
             (dragStart)="onDragStart()"
             (dragEnd)="onDragEnd()"
             (onRemove)="deleteCard($event, i)"
+            (onSave)="updateCard($event)"
           />
         </div>
         <app-item-form

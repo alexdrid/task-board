@@ -5,11 +5,10 @@ import {
   moveItemInArray,
   transferArrayItem,
   CdkDropList,
-  CdkDragPlaceholder,
 } from '@angular/cdk/drag-drop';
 import { ListItemComponent } from '../list-item/list-item.component';
 import { CARDS_TABLE, DataService, LISTS_TABLE } from 'src/app/services/data.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormArray, FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { List, ListCard } from 'src/app/models/data.model';
 import { first } from 'rxjs';
@@ -50,6 +49,9 @@ export class BoardComponent implements OnInit, AfterViewInit {
   hideForm: boolean = true;
   formIndex: number | null = null;
 
+
+  private router: Router = inject(Router);
+
   ngOnInit(): void {
     this.boardId = this.route.snapshot.paramMap.get('id')
     if (this.boardId) {
@@ -83,8 +85,6 @@ export class BoardComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     this.boardDropZones.changes.pipe(first()).subscribe((list: QueryList<CdkDropList<ListCard[]>>) => {
       list.forEach((dz, _i, array) => dz.connectedTo = array.filter(item => item !== dz))
-      console.log(list);
-      
     });
 
   }
@@ -98,6 +98,13 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   createList(): void {
     this.data.addBoardList(this.boardId!, this.lists.length).then(res => {
+      console.log("🚀 ~ file: board.component.ts:99 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
+    })
+  }
+
+  deleteList(index: number): void {
+    this.data.deleteBoardList(this.lists[index]).then(res => {
+      console.log("🚀 ~ file: board.component.ts:99 ~ BoardComponent ~ this.data.addBoardList ~ res:", res)
     })
   }
 
@@ -115,14 +122,14 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   addCard(title: string, index: number): void {
     const targetList: List = this.lists[index]
-    console.log("🚀 ~ file: board.component.ts:117 ~ BoardComponent ~ addCard ~ targetList:", targetList)
-    this.data.addListCard(title, targetList.id, this.boardId!, this.listCards.get(targetList.id)!.length).then((res) => {
+    this.data.addListCard(title, targetList.id, this.boardId!, this.listCards.get(targetList.id)?.length).then((res) => {
       this.hideTaskForm(index)
     })
   }
 
   updateCard(card: ListCard): void {
     this.data.updateCard(card).then(res => {
+      console.log("🚀 ~ file: board.component.ts:152 ~ BoardComponent ~ this.data.updateCard ~ card:", card)
 
     })
   }
@@ -131,6 +138,13 @@ export class BoardComponent implements OnInit, AfterViewInit {
     this.data.deleteCard(card).then(res => {
 
     })
+  }
+
+  deleteProject(): void {
+    this.data.deleteBoard(this.boardInfo).then(res => {
+
+      this.router.navigateByUrl('/projects');
+    });
   }
 
   drop(event: CdkDragDrop<ListCard[]>) {
@@ -170,6 +184,7 @@ export class BoardComponent implements OnInit, AfterViewInit {
 
   handleRealtimeUpdates() {
     this.data.getTableChanges(LISTS_TABLE).subscribe(payload => {
+      console.log("🚀 ~ file: board.component.ts:171 ~ BoardComponent ~ this.data.getTableChanges ~ payload:", payload)
 
       switch (payload.eventType) {
         case 'INSERT':

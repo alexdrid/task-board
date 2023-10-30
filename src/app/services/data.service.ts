@@ -50,6 +50,14 @@ export class DataService {
       .match({ id: board.id });
   }
 
+  
+ deleteBoard(board: any) {
+    return this.supabase
+      .from(BOARDS_TABLE)
+      .delete()
+      .match({ id: board.id });
+  }
+
   // CRUD Lists
   getBoardLists(boardId: string) {
     return this.supabase
@@ -102,6 +110,7 @@ export class DataService {
   }
 
   updateCard(card: ListCard) {
+    console.log("🚀 ~ file: data.service.ts:105 ~ DataService ~ updateCard ~ card:", card)
     return this.supabase
       .from(CARDS_TABLE)
       .update(card)
@@ -118,9 +127,10 @@ export class DataService {
   
 
   getTableChanges(table: string): Observable<RealtimePostgresChangesPayload<any>> {
+    console.log("🚀 ~ file: data.service.ts:121 ~ DataService ~ getTableChanges ~ table:", table)
     const changes = new Subject<RealtimePostgresChangesPayload<any>>();
 
-    this.supabase.channel('schema-db-changes')
+    this.supabase.channel(table)
       .on(
         'postgres_changes',
         {

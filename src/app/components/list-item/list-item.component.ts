@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDrag, CdkDragPlaceholder, DragDropModule } from '@angular/cdk/drag-drop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,11 +19,17 @@ import { ListCard } from 'src/app/models/data.model';
   
   ],
 })
-export class ListItemComponent {
+export class ListItemComponent implements OnInit{
   @Input() cardInfo!: ListCard;
   @Output() onRemove = new EventEmitter<ListCard>()
+  @Output() onSave = new EventEmitter<ListCard>()
 
   titleFormControl = new FormControl<string>('', { nonNullable: true, validators: [Validators.required] })
+
+  ngOnInit(): void {
+      this.titleFormControl.setValue(this.cardInfo.title)
+  }
+
 
   remove(): void {
     this.onRemove.emit(this.cardInfo)
@@ -35,7 +41,8 @@ export class ListItemComponent {
         ...this.cardInfo,
         title: this.titleFormControl.value
       }
-      this.onRemove.emit(newCard)
+      this.titleFormControl.markAsPristine()
+      this.onSave.emit(newCard)
     }
   }
 }

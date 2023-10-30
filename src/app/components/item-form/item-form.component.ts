@@ -24,7 +24,6 @@ export class ItemFormComponent implements AfterViewInit {
   });
 
   ngAfterViewInit(): void {
-    console.log(this.elementRef.nativeElement);
     this.elementRef.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
