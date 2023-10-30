@@ -58,14 +58,28 @@ export class ProjectsComponent {
   private handleChanges() {
     // Handle new boards inserts
     this.data.getTableChanges(BOARDS_TABLE).subscribe((payload: RealtimePostgresChangesPayload<Board>) => {
+      console.log("🚀 ~ file: projects.component.ts:61 ~ ProjectsComponent ~ this.data.getTableChanges ~ payload:", payload)
 
-      if (payload.eventType === 'INSERT') {
+      switch (payload.eventType) {
+        case 'INSERT':
+          const newBoard: Board = payload.new as Board
+          this.boards.push(newBoard)
+          this.router.navigateByUrl(`/projects/${newBoard.id}`)
+          break;
+        case 'UPDATE':
+          // const updatedListCard: ListCard = payload.new as ListCard
+          // this.listFormArray.at(updatedListCard.position).setValue(updatedListCard.title)
+          break;
+        case 'DELETE':
+          const { id }: Board = payload.old as Board;
+          this.boards.filter(board => board.id !== id)
+          break;
 
-        const newBoard: Board = payload.new as Board
-
-        this.boards.push(newBoard)
-        this.router.navigateByUrl(`/projects/${newBoard.id}`)
+        default:
+          break;
       }
     })
+
+
   }
 }
